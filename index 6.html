@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YMCA Climate Impact Tracker</title>
+  <style>
+    body {
+      font-family: Verdana, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border: 3px solid #ff0044;
+      max-width: 600px;
+      margin: 0 auto;
+      border-radius: 10px;
+    }
+    h1 {
+      color: #ff0044;
+      text-align: center;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #ff0044;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>YMCA Climate Fund Tracker</h1>
+  <form id="impact-form">
+    <input type="text" name="project_title" placeholder="Project Title" required />
+    <input type="date" name="date" required />
+    <input type="text" name="local_ymca" placeholder="Your YMCA (e.g. Edinburgh)" required />
+    <input type="number" name="participants" placeholder="People Involved" required />
+    <textarea name="description" placeholder="What did you do?" required></textarea>
+    <select name="impact_type" required>
+      <option value="">Type of Impact</option>
+      <option value="Education">Education</option>
+      <option value="Biodiversity">Biodiversity</option>
+      <option value="Waste Reduction">Waste Reduction</option>
+      <option value="Energy Use">Energy Use</option>
+    </select>
+
+    <label>Upload a Photo:</label>
+    <input type="file" id="imageUpload" accept="image/*" />
+
+    <input type="text" name="submitted_by" placeholder="Your Name" required />
+    <input type="email" name="email" placeholder="Your Email" required />
+
+    <input type="hidden" name="image_url" id="imageUrl" />
+
+    <button type="submit">Submit Impact</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('impact-form');
+    const imageInput = document.getElementById('imageUpload');
+    const imageUrlField = document.getElementById('imageUrl');
+
+    const CLOUD_NAME = 'your-cloud-name';
+    const UPLOAD_PRESET = 'your-upload-preset';
+    const SHEET_ENDPOINT = 'https://api.sheetmonkey.io/form/your-sheetmonkey-id';
+
+    imageInput.addEventListener('change', async () => {
+      const file = imageInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      imageUrlField.value = data.secure_url;
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      await fetch(SHEET_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      alert('Thanks – your impact has been submitted!');
+      form.reset();
+    });
+  </script>
+</body>
+</html>
